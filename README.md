@@ -9,3 +9,6 @@ Allows clients to modify hearing weapon sounds
 1. Install `ClientPrefs_CS2`
 2. Compile or copy CS2-StopSound to `counterstrikesharp/plugins/CS2-StopSound` folger
 3. Restart server
+
+## Commands:
+`css_stopsound` - Toggle hearing weapon sounds (0:Disable 1:Enable 2:Silence)
