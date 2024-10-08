@@ -1,0 +1,5 @@
+{
+  "Message_Stopsound_Disabled": "Звуки стрельбы были {red}Включены",
+  "Message_Stopsound_Enabled": "Звуки стрельбы были {green}Отключены",
+  "Message_Stopsound_Silenced": "Звуки стрельбы были {blue}Заглушены"
+} 

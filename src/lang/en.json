@@ -1,0 +1,5 @@
+{
+  "Message_Stopsound_Disabled": "Weapon sounds were {red}Enabled",
+  "Message_Stopsound_Enabled": "Weapon sounds were {green}Disabled",
+  "Message_Stopsound_Silenced": "Weapon sounds were {blue}Silenced"
+} 
