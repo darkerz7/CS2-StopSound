@@ -18,7 +18,7 @@ namespace CS2_StopSound
 		public override string ModuleName => "Stop Weapon Sounds";
 		public override string ModuleDescription => "Allows clients to modify hearing weapon sounds";
 		public override string ModuleAuthor => "DarkerZ [RUS]";
-		public override string ModuleVersion => "1.DZ.0";
+		public override string ModuleVersion => "1.DZ.1";
 
 		public override void Load(bool hotReload)
 		{
@@ -112,8 +112,9 @@ namespace CS2_StopSound
 				string sValue = await _CP_api.GetClientCookie(player.SteamID.ToString(), "StopSound");
 				int iValue;
 				if (string.IsNullOrEmpty(sValue) || !Int32.TryParse(sValue, out iValue)) iValue = 0;
-				if (iValue <= 0) g_iStopsound[player.Slot] = 0;
-				else if(iValue >= 2) g_iStopsound[player.Slot] = 2;
+				if (iValue <= 0) iValue = 0;
+				else if(iValue >= 2) iValue = 2;
+				g_iStopsound[player.Slot] = iValue;
 			}
 		}
 
@@ -128,6 +129,7 @@ namespace CS2_StopSound
 
 		static void ReplyToCommand(CCSPlayerController player, bool bConsole, string sMessage, params object[] arg)
 		{
+			if (Strlocalizer == null) return;
 			Server.NextFrame(() =>
 			{
 				if (player is { IsValid: true, IsBot: false, IsHLTV: false })
