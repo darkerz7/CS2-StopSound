@@ -19,7 +19,7 @@ namespace CS2_StopSound
 		public override string ModuleName => "Stop Weapon Sounds";
 		public override string ModuleDescription => "Allows players to modify hearing weapon sounds";
 		public override string ModuleAuthor => "DarkerZ [RUS]";
-		public override string ModuleVersion => "1.DZ.2";
+		public override string ModuleVersion => "1.DZ.3";
 
 		public override void OnAllPluginsLoaded(bool hotReload)
 		{
@@ -83,7 +83,7 @@ namespace CS2_StopSound
 				}
 			});
 
-			return HookResult.Continue;
+			return HookResult.Changed;
 		}
 
 		private HookResult OnEventPlayerDisconnect(EventPlayerDisconnect @event, GameEventInfo info)
