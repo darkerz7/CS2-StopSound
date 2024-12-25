@@ -19,7 +19,7 @@ namespace CS2_StopSound
 		public override string ModuleName => "Stop Weapon Sounds";
 		public override string ModuleDescription => "Allows players to modify hearing weapon sounds";
 		public override string ModuleAuthor => "DarkerZ [RUS]";
-		public override string ModuleVersion => "1.DZ.3";
+		public override string ModuleVersion => "1.DZ.4";
 
 		public override void OnAllPluginsLoaded(bool hotReload)
 		{
@@ -118,12 +118,12 @@ namespace CS2_StopSound
 			}
 		}
 
-		async void GetValue(CCSPlayerController? player)
+		void GetValue(CCSPlayerController? player)
 		{
 			if (player == null || !player.IsValid) return;
 			if (_CP_api != null)
 			{
-				string sValue = await _CP_api.GetClientCookie(player.SteamID.ToString(), "StopSound");
+				string sValue = _CP_api.GetClientCookie(player.SteamID.ToString(), "StopSound");
 				int iValue;
 				if (string.IsNullOrEmpty(sValue) || !Int32.TryParse(sValue, out iValue)) iValue = 0;
 				if (iValue <= 0) iValue = 0;
@@ -132,12 +132,12 @@ namespace CS2_StopSound
 			}
 		}
 
-		async void SetValue(CCSPlayerController? player)
+		void SetValue(CCSPlayerController? player)
 		{
 			if (player == null || !player.IsValid) return;
 			if (_CP_api != null)
 			{
-				await _CP_api.SetClientCookie(player.SteamID.ToString(), "StopSound", g_iStopsound[player.Slot].ToString());
+				_CP_api.SetClientCookie(player.SteamID.ToString(), "StopSound", g_iStopsound[player.Slot].ToString());
 			}
 		}
 
