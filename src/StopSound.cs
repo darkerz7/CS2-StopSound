@@ -1,38 +1,33 @@
-﻿using ClientPrefsAPI;
-using CounterStrikeSharp.API;
+﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Core.Capabilities;
 using CounterStrikeSharp.API.Core.Translations;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.UserMessages;
+using CounterStrikeSharp.API.Modules.Utils;
 using Microsoft.Extensions.Localization;
+using PlayerSettings;
 
 namespace CS2_StopSound
 {
 	public class StopSound : BasePlugin
 	{
 		static int[] g_iStopsound = new int[65];
-		static IClientPrefsAPI? _CP_api;
+		private ISettingsApi? _PlayerSettingsAPI;
+		private readonly PluginCapability<ISettingsApi?> _PlayerSettingsAPICapability = new("settings:nfcore");
 		static IStringLocalizer? Strlocalizer;
 
 		public override string ModuleName => "Stop Weapon Sounds";
 		public override string ModuleDescription => "Allows players to modify hearing weapon sounds";
 		public override string ModuleAuthor => "DarkerZ [RUS]";
-		public override string ModuleVersion => "1.DZ.4";
+		public override string ModuleVersion => "1.DZ.4.1";
 
 		public override void OnAllPluginsLoaded(bool hotReload)
 		{
-			try
-			{
-				PluginCapability<IClientPrefsAPI> CapabilityEW = new("clientprefs:api");
-				_CP_api = IClientPrefsAPI.Capability.Get();
-			}
-			catch (Exception)
-			{
-				_CP_api = null;
-				PrintToConsole("ClientPrefs API Failed!");
-			}
+			_PlayerSettingsAPI = _PlayerSettingsAPICapability.Get();
+			if (_PlayerSettingsAPI == null)
+				PrintToConsole("PlayerSettings core not found...");
 
 			if (hotReload)
 			{
@@ -60,30 +55,41 @@ namespace CS2_StopSound
 
 		private HookResult OnWeaponSound(UserMessage um)
 		{
-			Utilities.GetPlayers().ForEach(player =>
-			{
-				if (player != null && player.IsValid && g_iStopsound[player.Slot] > 0)
-				{
-					um.Recipients.Remove(player);
-				}
-			});
+			var wi = um.ReadUInt("weapon_id");
+			var st = um.ReadInt("sound_type");
+			var idi = um.ReadUInt("item_def_index");
 
-			um.Send();
+			//Console.WriteLine($"weapon_id:{wi} sound_type:{st} item_def_index:{idi}");
 
 			um.SetUInt("weapon_id", 0);
 			um.SetInt("sound_type", 9);
-			um.SetUInt("item_def_index", 61);
+			um.SetUInt("item_def_index", 60); //60 - M4A1-s, 61 - usp-s
 
-			um.Recipients.Clear();
+			um.Recipients = GetRecipients(2); //Silence
+			um.Send();
+
+			um.SetUInt("weapon_id", wi);
+			um.SetInt("sound_type", st);
+			um.SetUInt("item_def_index", idi);
+
+			um.Recipients = GetRecipients(0); //Enable sounds
+
+			return HookResult.Continue;
+		}
+
+		RecipientFilter GetRecipients(int iType)
+		{
+			var rf = new RecipientFilter();
+
 			Utilities.GetPlayers().ForEach(player =>
 			{
-				if (player != null && player.IsValid && g_iStopsound[player.Slot] == 2)
+				if (player != null && player.IsValid && g_iStopsound[player.Slot] == iType)
 				{
-					um.Recipients.Add(player);
+					rf.Add(player);
 				}
 			});
 
-			return HookResult.Changed;
+			return rf;
 		}
 
 		private HookResult OnEventPlayerDisconnect(EventPlayerDisconnect @event, GameEventInfo info)
@@ -100,14 +106,12 @@ namespace CS2_StopSound
 		}
 
 		[ConsoleCommand("css_stopsound", "Toggle hearing weapon sounds")]
-		[CommandHelper(minArgs: 1, usage: "[number 0:Disable 1:Enable 2:Silence]", whoCanExecute: CommandUsage.CLIENT_ONLY)]
+		[CommandHelper(minArgs: 0, usage: "[number 0:Disable 1:Enable 2:Silence]", whoCanExecute: CommandUsage.CLIENT_ONLY)]
 		public void OnCommandStopSound(CCSPlayerController? player, CommandInfo command)
 		{
 			if (player == null || !player.IsValid) return;
-			int number;
-			if (!Int32.TryParse(command.GetArg(1), out number)) number = 0;
-			if (number <= 0) number = 0;
-			else if (number >= 2) number = 2;
+			if (!Int32.TryParse(command.GetArg(1), out int number)) number = g_iStopsound[player.Slot]+1;
+			if (number < 0 || number > 2) number = 0;
 			g_iStopsound[player.Slot] = number;
 			SetValue(player);
 			switch (number)
@@ -121,11 +125,10 @@ namespace CS2_StopSound
 		void GetValue(CCSPlayerController? player)
 		{
 			if (player == null || !player.IsValid) return;
-			if (_CP_api != null)
+			if (_PlayerSettingsAPI != null)
 			{
-				string sValue = _CP_api.GetClientCookie(player.SteamID.ToString(), "StopSound");
-				int iValue;
-				if (string.IsNullOrEmpty(sValue) || !Int32.TryParse(sValue, out iValue)) iValue = 0;
+				string sValue = _PlayerSettingsAPI.GetPlayerSettingsValue(player, "StopSound", "1");
+				if (string.IsNullOrEmpty(sValue) || !Int32.TryParse(sValue, out int iValue)) iValue = 1;
 				if (iValue <= 0) iValue = 0;
 				else if(iValue >= 2) iValue = 2;
 				g_iStopsound[player.Slot] = iValue;
@@ -135,10 +138,7 @@ namespace CS2_StopSound
 		void SetValue(CCSPlayerController? player)
 		{
 			if (player == null || !player.IsValid) return;
-			if (_CP_api != null)
-			{
-				_CP_api.SetClientCookie(player.SteamID.ToString(), "StopSound", g_iStopsound[player.Slot].ToString());
-			}
+			_PlayerSettingsAPI?.SetPlayerSettingsValue(player, "StopSound", g_iStopsound[player.Slot].ToString());
 		}
 
 		static void ReplyToCommand(CCSPlayerController player, bool bConsole, string sMessage, params object[] arg)
