@@ -21,7 +21,7 @@ namespace CS2_StopSound
 		public override string ModuleName => "Stop Weapon Sounds";
 		public override string ModuleDescription => "Allows players to modify hearing weapon sounds";
 		public override string ModuleAuthor => "DarkerZ [RUS]";
-		public override string ModuleVersion => "1.DZ.4.1";
+		public override string ModuleVersion => "1.DZ.4.2";
 
 		public override void OnAllPluginsLoaded(bool hotReload)
 		{
@@ -138,7 +138,10 @@ namespace CS2_StopSound
 		void SetValue(CCSPlayerController? player)
 		{
 			if (player == null || !player.IsValid) return;
-			_PlayerSettingsAPI?.SetPlayerSettingsValue(player, "StopSound", g_iStopsound[player.Slot].ToString());
+			if (_PlayerSettingsAPI != null)
+			{
+				_PlayerSettingsAPI?.SetPlayerSettingsValue(player, "StopSound", g_iStopsound[player.Slot].ToString());
+			}
 		}
 
 		static void ReplyToCommand(CCSPlayerController player, bool bConsole, string sMessage, params object[] arg)
