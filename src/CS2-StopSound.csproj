@@ -19,5 +19,12 @@
 	<ItemGroup>
 		<None Update="lang\**\*.*" CopyToOutputDirectory="PreserveNewest" />
 	</ItemGroup>
+	
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="if exist $(ProjectDir)build rmdir /s/q $(ProjectDir)build" />
+	<Exec Command="if not exist $(ProjectDir)build mkdir $(ProjectDir)build" />
+    <Exec Command="copy /Y $(TargetDir)$(TargetName).dll $(ProjectDir)build\$(TargetName).dll" />
+	<Exec Command="move /Y $(TargetDir)lang $(ProjectDir)build" />
+  </Target>
 
 </Project>
